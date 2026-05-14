@@ -27,9 +27,12 @@ export class UsersService {
   }
 
   // UPDATE user by ID
-  update(id: number, name: string) {
+update(id: number, name?: string) {
+  if (name) {
     return this.usersRepository.update(id, { name });
   }
+  return { message: 'No fields to update' };
+}
 
   // DELETE user by ID
   remove(id: number) {

@@ -7,5 +7,8 @@ export class User {
 
   @Column()
   name!: string; // definite assignment assertion
+
+  @Column({ nullable: true })
+  email!: string;
 }
 

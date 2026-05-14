@@ -13,27 +13,31 @@ export class UsersController {
     return this.usersService.findAll();
   }
 
-  // GET /users/:id
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.usersService.findOne(Number(id));
-  }
-
-  // POST /users
+  // ✅ Create user with DTO validation
   @Post()
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.usersService.create(createUserDto.name);
+  async create(@Body() createUserDto: CreateUserDto) {
+    // DTO ensures input is valid (ValidationPipe handles this globally)
+    return await this.usersService.create(createUserDto.name);
   }
 
-  // PUT /users/:id
+  // ✅ Get single user with error handling
+  @Get(':id')
+  async findOne(@Param('id') id: string) {
+    // Service throws NotFoundException if user doesn’t exist
+    return await this.usersService.findOne(Number(id));
+  }
+
+  // ✅ Update user with DTO validation + error handling
   @Put(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(Number(id), updateUserDto.name);
+  async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
+    // DTO ensures input is valid, service handles errors
+    return await this.usersService.update(Number(id), updateUserDto.name);
   }
 
-  // DELETE /users/:id
+  // ✅ Delete user with error handling
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.usersService.remove(Number(id));
+  async remove(@Param('id') id: string) {
+    // Service throws NotFoundException if user doesn’t exist
+    return await this.usersService.remove(Number(id));
   }
 }

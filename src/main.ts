@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
+import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -11,6 +12,9 @@ async function bootstrap() {
     forbidNonWhitelisted: true,           // - forbidNonWhitelisted: throw error if extra fields are sent
     forbidUnknownValues: true,           // - forbidUnknownValues: reject invalid objects
   }));
+
+  // ✅ Global logging interceptor (logs every request/response cycle)
+  app.useGlobalInterceptors(new LoggingInterceptor());
 
   // ✅ Get port from environment file (.env.development or .env.production)
   const port = process.env.PORT || 3000;

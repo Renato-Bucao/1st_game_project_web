@@ -2,6 +2,8 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '../entity/user.entity';
+import { CreateUserDto } from '../dto/create-user.dto';
+import { UpdateUserDto } from '../dto/update-user.dto';
 
 // ✅ Marks this class as injectable (pwede i‑inject sa controller/service)
 @Injectable()
@@ -20,7 +22,7 @@ export class UsersService {
   // READ one user by ID
   async findOne(id: number) {
     // ✅ Find user by ID (await waits for DB query result)
-    const user = await this.usersRepository.findOne({ where: { id } });
+    const user = await this.usersRepository.findOne({ where: { accountId:id } });
 
     // ❌ If no user found, throw NotFoundException
     if (!user) {
@@ -33,36 +35,39 @@ export class UsersService {
 
   // CREATE new user
   // ✅ Async function because DB operations are asynchronous (return Promises)
-  async create(name: string) {
-    if (!name || name.trim() === '') {                                // ✅ Check if name is empty or only spaces                    
-      throw new BadRequestException('Name should not be empty');      // ❌ Throw error if invalid input
+  async create(createUserDto: CreateUserDto) {
+    if (!createUserDto.username || createUserDto.username.trim() === '') {                                // ✅ Check if name is empty or only spaces                    
+      throw new BadRequestException('Name should not be empty');                                // ❌ Throw error if invalid input
     }
-    const user = this.usersRepository.create({ name });               // ✅ Create a new User entity instance (not yet saved to DB)
-    return await this.usersRepository.save(user);                     // ✅ Save user to DB (await ensures we wait until DB operation finishes)
+    const user = this.usersRepository.create(createUserDto);               // ✅ Create a new User entity instance (not yet saved to DB)
+    return await this.usersRepository.save(user);                                                // ✅ Save user to DB (await ensures we wait until DB operation finishes)
   }
 
   // UPDATE user by ID
-  async update(id: number, name?: string) {
-    // ✅ Find user first
-    const user = await this.usersRepository.findOne({ where: { id } });
-    if (!user) {
-      throw new NotFoundException(`User with ID ${id} not found`);
-    }
-
-    // ✅ Validate new name
-    if (name && name.trim() !== '') {
-      user.name = name;
-    } else {
-      throw new BadRequestException('Name should not be empty');
-    }
-        // ✅ Save updated user back to DB
-    return await this.usersRepository.save(user);
+ async update(id: number, updateData: UpdateUserDto) {
+  const user = await this.usersRepository.findOne({ where: { accountId: id } });
+  if (!user) {
+    throw new NotFoundException(`User with ID ${id} not found`);
   }
+
+  // ✅ Validate username if provided
+  if (updateData.username !== undefined) {
+    if (updateData.username.trim() === '') {
+      throw new BadRequestException('Username should not be empty');
+    }
+    user.username = updateData.username;
+  }
+
+  // ✅ Merge other fields
+  Object.assign(user, updateData);
+
+  return await this.usersRepository.save(user);
+}
 
   // DELETE user by ID
   async remove(id: number) {
     // ✅ Delete user by ID
-    const result = await this.usersRepository.delete(id);
+    const result = await this.usersRepository.delete({ accountId: id });
 
     // ❌ If no rows affected, user not found
     if (result.affected === 0) {

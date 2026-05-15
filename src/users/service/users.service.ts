@@ -23,7 +23,9 @@ export class UsersService {
   // READ one user by ID
   async findOne(id: number) {
     // ✅ Find user by ID (await waits for DB query result)
-    const user = await this.usersRepository.findOne({ where: { accountId:id } });
+    const user = await this.usersRepository.findOne({
+      where: { accountId: id }
+    });
 
     // ❌ If no user found, throw NotFoundException
     if (!user) {
@@ -31,6 +33,19 @@ export class UsersService {
     }
 
     // ✅ Return found user
+    return user;
+  }
+
+  // READ one user by username
+  async findOneByUsername(username: string) {
+    const user = await this.usersRepository.findOne({
+      where: { username }
+    });
+
+    if (!user) {
+      throw new NotFoundException(`User with username ${username} not found`);
+    }
+
     return user;
   }
 

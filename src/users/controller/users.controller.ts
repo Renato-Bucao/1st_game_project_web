@@ -1,38 +1,46 @@
-import { Controller, Get, Post, Body, Param, Put, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Put, Delete, UseGuards, Request } from '@nestjs/common';
 import { UsersService } from '../service/users.service';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { UpdateUserDto } from '../dto/update-user.dto';
+import { AuthGuard } from '@nestjs/passport'; // ✅ import guard
 
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  // GET /users
+  // ✅ Protected route: GET /users/profile
+  @UseGuards(AuthGuard('jwt')) // ✅ require JWT token
+  @Get('profile')
+  getProfile(@Request() req) {
+    // req.user comes from JwtStrategy.validate()
+    return req.user;
+  }
+
+  // GET /users → list all users
   @Get()
   findAll() {
     return this.usersService.findAll();
   }
 
-  // ✅ Create user with DTO validation
+  // POST /users → create new user
   @Post()
   async create(@Body() createUserDto: CreateUserDto) {
     return await this.usersService.create(createUserDto);
   }
 
-  // ✅ Get single user
+  // GET /users/:id → get single user
   @Get(':id')
   async findOne(@Param('id') id: string) {
     return await this.usersService.findOne(Number(id));
   }
 
-  // ✅ Update user with DTO validation
+  // PUT /users/:id → update user
   @Put(':id')
   async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    // FIX: pass the whole DTO, not just name
     return await this.usersService.update(Number(id), updateUserDto);
   }
 
-  // ✅ Delete user
+  // DELETE /users/:id → remove user
   @Delete(':id')
   async remove(@Param('id') id: string) {
     await this.usersService.remove(Number(id));

@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { User } from '../entity/user.entity';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { UpdateUserDto } from '../dto/update-user.dto';
+import * as bcrypt from 'bcrypt';
 
 // ✅ Marks this class as injectable (pwede i‑inject sa controller/service)
 @Injectable()
@@ -36,12 +37,24 @@ export class UsersService {
   // CREATE new user
   // ✅ Async function because DB operations are asynchronous (return Promises)
   async create(createUserDto: CreateUserDto) {
-    if (!createUserDto.username || createUserDto.username.trim() === '') {                                // ✅ Check if name is empty or only spaces                    
-      throw new BadRequestException('Name should not be empty');                                // ❌ Throw error if invalid input
-    }
-    const user = this.usersRepository.create(createUserDto);               // ✅ Create a new User entity instance (not yet saved to DB)
-    return await this.usersRepository.save(user);                                                // ✅ Save user to DB (await ensures we wait until DB operation finishes)
+  if (!createUserDto.username || createUserDto.username.trim() === '') {
+    throw new BadRequestException('Username should not be empty');
   }
+  if (!createUserDto.passwordHash || createUserDto.passwordHash.trim() === '') {
+    throw new BadRequestException('Password should not be empty');
+  }
+   // ✅ Hash the password before saving
+  const saltRounds = 10;
+  const hashedPassword = await bcrypt.hash(createUserDto.passwordHash, saltRounds);
+
+  // ✅ Replace plain password with hashed one
+  const user = this.usersRepository.create({
+    ...createUserDto,
+    passwordHash: hashedPassword,
+  });
+
+  return await this.usersRepository.save(user);
+}
 
   // UPDATE user by ID
  async update(id: number, updateData: UpdateUserDto) {

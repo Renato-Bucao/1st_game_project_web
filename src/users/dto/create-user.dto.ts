@@ -1,45 +1,30 @@
 import { 
   IsString, 
   IsEmail, 
-  IsOptional, 
-  IsNumber, 
-  IsIn, 
-  IsDecimal 
+  IsNotEmpty, 
+  IsIn 
 } from 'class-validator';
 
 export class CreateUserDto {
-  @IsString() // username must be string
-  username!: string;
+  @IsString()
+  @IsNotEmpty()
+  username!: string; // required, unique username
 
-  @IsEmail() // must be valid email format
-  @IsOptional() // optional kung imong entity gi-set as nullable
-  email?: string;
+  @IsString()
+  @IsNotEmpty()
+  password!: string; // required, hashed password
 
-  @IsString() // password hash (hashed value, not plain text)
-  passwordHash!: string;
+  @IsEmail()
+  @IsNotEmpty()
+  email!: string; // required, unique email
 
-  @IsOptional() // DB auto-sets registration date
-  registrationDate?: Date;
+  @IsIn(['active', 'banned', 'suspended'])
+  status!: string; // required, default 'active'
 
-  @IsOptional() // updated when user logs in
-  lastLogin?: Date;
+  @IsIn(['user', 'moderator', 'admin'])
+  role!: string; // required, default 'user'
 
-  @IsOptional() // last known IP address
-  ipAddress?: string;
-
-  @IsIn(['active', 'banned', 'suspended']) // must be one of these
-  @IsOptional() // default is active
-  accountStatus?: string;
-
-  @IsIn(['player', 'moderator', 'admin']) // must be one of these roles
-  @IsOptional() // default is player
-  role?: string;
-
-  @IsNumber() // VIP level must be number
-  @IsOptional() // default is 0
-  vipLevel?: number;
-
-  @IsNumber()
-  @IsOptional() // default is 0.00
-  currencyBalance?: number;
+  @IsString()
+  @IsNotEmpty()
+  ipAddress!: string; // required, must log IP after registration
 }

@@ -5,7 +5,7 @@ import { UsersModule } from 'src/users/users.module';
 import { JwtModule, JwtModuleOptions } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { JwtStrategy } from './strategy/jwt.strategy';
+import { JwtStrategy } from './strategies/jwt.strategy';
 
 @Module({
   imports: [
@@ -17,7 +17,7 @@ import { JwtStrategy } from './strategy/jwt.strategy';
        useFactory: async (configService: ConfigService): Promise<JwtModuleOptions> => {
     return {
       secret: configService.get<string>('JWT_SECRET'),
-      signOptions: { expiresIn: Number(configService.get('JWT_EXPIRES_IN') || 3600) }, // (3600 = 1 hour).
+      signOptions: { expiresIn: parseInt(configService.get<string>('JWT_EXPIRES_IN') ?? '3600', 10) },
     };
   },
 }),

@@ -2,48 +2,37 @@ import {
   IsString, 
   IsEmail, 
   IsOptional, 
-  IsNumber, 
   IsIn, 
-  IsDecimal, 
   IsNotEmpty 
 } from 'class-validator';
 
 export class UpdateUserDto {
   @IsString()
-  @IsNotEmpty() // prevent empty string if username is provided
-  @IsOptional() // optional for update
-  username?: string;
-
-  @IsEmail()
-  @IsOptional() // optional for update
-  email?: string;
+  @IsNotEmpty()
+  @IsOptional()
+  username?: string; // optional, but cannot be empty if provided
 
   @IsString()
-  @IsOptional() // hashed password
-  passwordHash?: string;
-
+  @IsNotEmpty()
   @IsOptional()
-  registrationDate?: Date;
+  password?: string; // optional, will be re-hashed if updated
 
+  @IsEmail()
   @IsOptional()
-  lastLogin?: Date;
-
-  @IsOptional()
-  ipAddress?: string;
+  email?: string; // optional, must be valid email if provided
 
   @IsIn(['active', 'banned', 'suspended'])
   @IsOptional()
-  accountStatus?: string;
+  status?: string; // optional, must be one of these values
 
-  @IsIn(['player', 'moderator', 'admin'])
+  @IsIn(['member', 'moderator', 'admin'])
   @IsOptional()
-  role?: string;
+  role?: string; // optional, must be one of these values
 
-  @IsNumber()
   @IsOptional()
-  vipLevel?: number;
+  lastLogin?: Date; // optional, updated automatically on login
 
-  @IsNumber()
+  @IsString()
   @IsOptional()
-  currencyBalance?: number;
+  ipAddress?: string; // optional, updated when user logs in/registers
 }

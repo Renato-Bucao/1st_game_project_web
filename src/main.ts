@@ -1,33 +1,18 @@
-import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
-import { ValidationPipe } from '@nestjs/common';
-import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
+import { ValidationPipe } from '@nestjs/common'; // ✅ Import ValidationPipe para automatic DTO validation
+import { NestFactory } from '@nestjs/core';      // ✅ Import NestFactory para maka-create ug NestJS app instance
+import { AppModule } from './app.module';        // ✅ Import root AppModule (entry point sa imong app)
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule); // ✅ Create NestJS application gamit ang AppModule
 
+  app.useGlobalPipes(
+    new ValidationPipe({                          // ✅ Apply global validation pipe
+      whitelist: true                             // whitelist: true → automatic remove ang extra fields nga wala sa DTO
+    })        
+    
+  );
+
+  await app.listen(parseInt(process.env.PORT ?? '3000', 10));   // ✅ Start server sa port gikan sa .env (PORT) or default 3000 kung wala gi-set
   
-  app.useGlobalPipes(new ValidationPipe({   // ✅ Enable global validation for all incoming requests
-    whitelist: true,                       // - whitelist: remove fields not defined in DTO
-    forbidNonWhitelisted: true,           // - forbidNonWhitelisted: throw error if extra fields are sent
-    forbidUnknownValues: true,           // - forbidUnknownValues: reject invalid objects
-  }));
-
-  // ✅ Global logging interceptor (logs every request/response cycle)
-  app.useGlobalInterceptors(new LoggingInterceptor());
-
-  // ✅ Get port from environment file (.env.development or .env.production)
-  const port = process.env.PORT || 3000;
-
-  // ✅ Start the application on the specified port
-  await app.listen(port);
 }
-
-// 🟡 Debug logs to verify environment variables loaded correctly
-console.log('ENV:', process.env.NODE_ENV);       // Shows current environment (development or production)
-console.log('DB:', process.env.DB_NAME);         // Shows which database name is being used
-console.log('DB_HOST:', process.env.DB_HOST);    // Shows database host (localhost or prod host)
-console.log('DB_PORT:', process.env.DB_PORT);    // Shows database port (usually 3306 for MySQL)
-console.log('DB_USER:', process.env.DB_USER);    // Shows database username
-
-bootstrap();
+bootstrap(); // ✅ Run bootstrap function aron mo-launch ang application

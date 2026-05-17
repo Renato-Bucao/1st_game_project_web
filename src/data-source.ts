@@ -1,6 +1,5 @@
-import 'dotenv/config';   // ✅ load .env file first
 import { DataSource } from 'typeorm';
-import { User } from './users/entity/user.entity';
+import { entities } from './typeorm/entities';
 
 export const AppDataSource = new DataSource({
   type: 'mysql',
@@ -9,6 +8,6 @@ export const AppDataSource = new DataSource({
   username: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
-  entities: [User],
+  entities: entities, // ✅ puro entity classes lang
   migrations: ['src/migrations/*.ts'],
 });

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common'; // ✅ NestJS core decorators ug exceptions
+import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common'; // ✅ NestJS core decorators ug exceptions
 import { InjectRepository } from '@nestjs/typeorm'; // ✅ Para ma-inject ang TypeORM repository
 import { Repository } from 'typeorm';               // ✅ TypeORM repository class
 import { User } from '../entities/user';            // ✅ User entity nga naka-map sa DB table
@@ -30,6 +30,19 @@ export class UsersService {
     return user;                                    // ✅ Return user object kung makita
   }
 //----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  // Find one user by email
+  async findOneByEmail(email: string): Promise<User> {
+    const user = await this.usersRepository.findOne({
+      where: { email },
+    });
+
+    if (!user) {
+      throw new NotFoundException(`User with email ${email} not found`);
+    }
+
+    return user;
+  }
+//----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
   // READ one user by username
   async findOneByUsername(username: string) {
     const user = await this.usersRepository.findOne({ where: { username } }); // ✅ Query user by username
@@ -41,63 +54,75 @@ export class UsersService {
   }
 //----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
   // CREATE new user
-  async create(createUserDto: CreateUserDto) {
-    const { username, email, status, role, ipAddress, password } = createUserDto;
+async create(createUserDto: CreateUserDto) {
+  const { username, email, password, ipAddress } = createUserDto;
 
-    // ✅ Input validation
-    if (!username || username.trim() === '') throw new BadRequestException('Username should not be empty');
-    if (!password || password.trim() === '') throw new BadRequestException('Password should not be empty');
-    if (!email || email.trim() === '') throw new BadRequestException('Email should not be empty');
+  // ✅ Input validation
+  if (!username || username.trim() === '')
+    throw new BadRequestException('Username should not be empty');
+  if (!password || password.trim() === '')
+    throw new BadRequestException('Password should not be empty');
+  if (!email || email.trim() === '')
+    throw new BadRequestException('Email should not be empty');
 
     // ✅ Hash password before saving
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-    // ✅ Create new user entity
-    const user = this.usersRepository.create({
-      username,
-      email,
-      status,     // optional field
-      role,       // optional field
-      ipAddress,
-      password: hashedPassword, // ✅ store hashed password only
+   // ✅ Create new user entity
+  const user = this.usersRepository.create({
+    username,
+    email,
+    password: hashedPassword, // store hashed password only
+    status: 'active',         // default
+    role: 'user',           // default
+    createdDate: new Date(),
+    ipAddress,                // ✅ automatic log sa IP
     });
 
     return await this.usersRepository.save(user);  // ✅ Save user to DB
   }
 //----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
   // UPDATE user by ID
-  async update(id: number, updateData: UpdateUserDto) {
-    const user = await this.usersRepository.findOne({ where: { id } }); // ✅ Find user by ID
-    if (!user) throw new NotFoundException(`User with ID ${id} not found`);
-
-    // ✅ Update username if provided
-    if (updateData.username !== undefined) {
-      if (updateData.username.trim() === '') throw new BadRequestException('Username should not be empty');
-      user.username = updateData.username;
-    }
-
-    // ✅ Update password securely
-    if (updateData.password !== undefined) {
-      if (updateData.password.trim() === '') throw new BadRequestException('Password should not be empty');
-      const saltRounds = 10;
-      user.password = await bcrypt.hash(updateData.password, saltRounds);
-    }
-
-    // ✅ Update email if provided
-    if (updateData.email !== undefined) {
-      if (updateData.email.trim() === '') throw new BadRequestException('Email should not be empty');
-      user.email = updateData.email;
-    }
-
-    // ✅ Update other optional fields
-    if (updateData.status !== undefined) user.status = updateData.status;
-    if (updateData.role !== undefined) user.role = updateData.role;
-    if (updateData.ipAddress !== undefined) user.ipAddress = updateData.ipAddress;
-    if (updateData.lastLogin !== undefined) user.lastLogin = updateData.lastLogin;
-
-    return await this.usersRepository.save(user);  // ✅ Save updated user to DB
+  async update(id: number, updateData: UpdateUserDto, currentUser?: any) {
+  // ✅ Kung naa ang currentUser (gikan sa token), i‑check nga match ang id
+  if (currentUser && currentUser.userId !== id) {
+    throw new ForbiddenException('You can only update your own account');
   }
+
+  const user = await this.usersRepository.findOne({ where: { id } });
+  if (!user) throw new NotFoundException(`User with ID ${id} not found`);
+
+    // ✅ Apply updates
+  if (updateData.username) user.username = updateData.username;
+  if (updateData.email) user.email = updateData.email;
+  if (updateData.password) {
+    const saltRounds = 10;
+    user.password = await bcrypt.hash(updateData.password, saltRounds);
+    } 
+  
+  // ✅ Same update logic as before
+  if (updateData.username !== undefined) {
+    if (updateData.username.trim() === '') throw new BadRequestException('Username should not be empty');
+    user.username = updateData.username;
+  }
+
+  if (updateData.password !== undefined) {
+    if (updateData.password.trim() === '') throw new BadRequestException('Password should not be empty');
+    const saltRounds = 10;
+    user.password = await bcrypt.hash(updateData.password, saltRounds);
+  }
+
+  if (updateData.email !== undefined) {
+    if (updateData.email.trim() === '') throw new BadRequestException('Email should not be empty');
+    user.email = updateData.email;
+  }
+
+  if (updateData.status !== undefined) user.status = updateData.status;
+  if (updateData.role !== undefined) user.role = updateData.role;
+
+  return await this.usersRepository.save(user);
+}
 //----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
   // DELETE user by ID
   async remove(id: number) {

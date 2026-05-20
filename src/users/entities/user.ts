@@ -45,8 +45,10 @@ export class User extends BaseEntity {
   lastLogin!: Date;                                                       // updated when user logs in
 
   @Column({
-    nullable: false,
+    nullable: true,
   }) 
   ipAddress!: string;                                                    // last known IP address of user
 
+    @Column({ nullable: true })
+  resetToken?: string; // ✅ only in entity
 }

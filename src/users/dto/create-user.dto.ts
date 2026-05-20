@@ -2,7 +2,8 @@ import {
   IsString, 
   IsEmail, 
   IsNotEmpty, 
-  IsIn 
+  IsIn, 
+  IsOptional
 } from 'class-validator';
 
 export class CreateUserDto {
@@ -18,13 +19,8 @@ export class CreateUserDto {
   @IsNotEmpty()
   email!: string; // required, unique email
 
-  @IsIn(['active', 'banned', 'suspended'])
-  status!: string; // required, default 'active'
-
-  @IsIn(['user', 'moderator', 'admin'])
-  role!: string; // required, default 'user'
-
+    // ✅ optional, auto‑set from req.ip
   @IsString()
-  @IsNotEmpty()
-  ipAddress!: string; // required, must log IP after registration
+  @IsOptional()
+  ipAddress?: string;
 }

@@ -2,37 +2,41 @@ import {
   IsString, 
   IsEmail, 
   IsOptional, 
-  IsIn, 
-  IsNotEmpty 
+  IsNotEmpty, 
+  Matches 
 } from 'class-validator';
 
 export class UpdateUserDto {
   @IsString()
   @IsNotEmpty()
   @IsOptional()
-  username?: string; // optional, but cannot be empty if provided
+  username?: string;
 
   @IsString()
   @IsNotEmpty()
   @IsOptional()
-  password?: string; // optional, will be re-hashed if updated
+  password?: string; // will be re-hashed in service
 
   @IsEmail()
   @IsOptional()
-  email?: string; // optional, must be valid email if provided
+  email?: string;
 
-  @IsIn(['active', 'banned', 'suspended'])
+  // ✅ Allow "active", "banned", or "suspended:<duration>"
   @IsOptional()
-  status?: string; // optional, must be one of these values
-
-  @IsIn(['member', 'moderator', 'admin'])
-  @IsOptional()
-  role?: string; // optional, must be one of these values
+  @Matches(/^(active|banned|suspended(?::(1day|3days|5days))?)$/)
+  status?: string;
 
   @IsOptional()
-  lastLogin?: Date; // optional, updated automatically on login
+  @Matches(/^(user|moderator|admin)$/)
+  role?: string;
 
+  @IsOptional()
+  lastLogin?: Date;
+
+  @IsOptional()
+  ipAddress?: string;
+
+  @IsOptional()
   @IsString()
-  @IsOptional()
-  ipAddress?: string; // optional, updated when user logs in/registers
+  resetToken?: string;
 }

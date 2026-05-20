@@ -1,25 +1,26 @@
 import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { ROLES_KEY } from '../../common/decorators/roles.decorator';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
   constructor(private reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
-    // kuha roles gikan sa metadata
-    const requiredRoles = this.reflector.getAllAndOverride<string[]>(ROLES_KEY, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
-    if (!requiredRoles) {
-      return true; // kung walay @Roles decorator, allow by default
+    const requiredRoles = this.reflector.get<string[]>('roles', context.getHandler());
+    const request = context.switchToHttp().getRequest();
+    const user = request.user; // decoded JWT payload
+
+    // ✅ If admin → always allow
+    if (user.role === 'admin') {
+      return true;
     }
 
-    const { user } = context.switchToHttp().getRequest();
-    if (!user) return false;
+    // ✅ If no roles required → allow
+    if (!requiredRoles) {
+      return true;
+    }
 
-    // check kung ang role sa user naa sa requiredRoles
+    // ✅ Otherwise check if user role is in required roles
     return requiredRoles.includes(user.role);
   }
 }

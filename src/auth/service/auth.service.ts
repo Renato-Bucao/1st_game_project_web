@@ -95,7 +95,7 @@ export class AuthService {
   // ✅ Save token in DB (optional, for tracking)
   await this.usersService.update(user.id, { resetToken });
 
-  /* ✅ Send email with reset link
+  // ✅ Send email with reset link
   const resetLink = `https://your-frontend.com/reset-password?token=${resetToken}`;
   await this.mailService.sendMail({
     to: user.email,
@@ -103,7 +103,7 @@ export class AuthService {
     text: `Click here to reset your password: ${resetLink}`,
   });
 
-  return { message: 'Password reset link sent to your email' };*/
+  return { message: 'Password reset link sent to your email' };
 }
 
 async resetPassword(token: string, newPassword: string) {

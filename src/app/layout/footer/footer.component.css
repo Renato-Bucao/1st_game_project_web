@@ -1,0 +1,36 @@
+footer {
+  background-color: #111; /* dark background */
+  color: #eee;
+  padding: 30px 20px;
+  text-align: center;
+  border-top: 2px solid crimson; /* red line top */
+}
+
+.footer-sections {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 40px;
+  margin-bottom: 20px;
+}
+
+.footer-group h4 {
+  color: gold;
+  margin-bottom: 10px;
+}
+
+.footer-group a {
+  color: #eee;
+  text-decoration: none;
+  margin: 0 5px;
+  transition: color 0.3s;
+}
+
+.footer-group a:hover {
+  color: crimson;
+}
+
+.footer-bottom {
+  font-size: 0.9rem;
+  color: #ccc;
+}

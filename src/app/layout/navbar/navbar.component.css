@@ -1,0 +1,45 @@
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #000; /* black background */
+  padding: 20px 40px;
+  border-bottom: 2px solid crimson; /* red line bottom */
+}
+
+.logo {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: gold;
+  letter-spacing: 2px;
+}
+
+nav a {
+  margin: 0 15px;
+  text-decoration: none;
+  color: #eee;
+  transition: color 0.3s;
+}
+
+nav a:hover {
+  color: crimson;
+}
+
+.account {
+  color: #ccc;
+}
+
+.account a {
+  margin-left: 10px;
+  color: gold;
+  text-decoration: none;
+}
+
+.account a:hover {
+  color: crimson;
+}
+
+.logo img {
+  height: 50px;   /* adjust size */
+  width: auto;
+}

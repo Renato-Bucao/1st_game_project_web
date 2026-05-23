@@ -1,0 +1,82 @@
+.hero {
+  text-align: center;
+  padding: 120px 20px;
+  background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)),
+              url('/assets/images/banner.png') no-repeat center/cover;
+}
+
+.hero h1 {
+  color: gold;
+  font-size: 3rem;
+  margin-bottom: 10px;
+  text-shadow: 2px 2px 5px black;
+}
+
+.hero p {
+  color: #ccc;
+  font-size: 1.2rem;
+  margin-bottom: 30px;
+}
+
+.hero-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+}
+
+.hero-buttons .btn {
+  display: inline-block;
+  padding: 12px 25px;
+  background: crimson;
+  color: white;
+  text-decoration: none;
+  border-radius: 5px;
+  font-weight: bold;
+  transition: background 0.3s;
+}
+
+.hero-buttons .btn:hover {
+  background: darkred;
+}
+
+.stats {
+  margin-top: 40px;
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+  font-weight: bold;
+  color: #eee;
+  flex-wrap: wrap;
+}
+
+.features {
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+  padding: 60px 20px;
+  background: #1a1a1a;
+}
+
+.feature {
+  flex: 1 1 200px;
+  margin: 20px;
+  padding: 20px;
+  background: #222;
+  border: 1px solid crimson;
+  border-radius: 8px;
+  text-align: center;
+  transition: transform 0.3s;
+}
+
+.feature h3 {
+  color: gold;
+  margin-bottom: 10px;
+}
+
+.feature p {
+  color: #ccc;
+}
+
+.feature:hover {
+  transform: translateY(-5px);
+}

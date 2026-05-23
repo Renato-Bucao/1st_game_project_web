@@ -3,13 +3,15 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "./out-tsc/app",
+    "outDir": "./dist/out-tsc", // use Angular default
     "types": []
   },
   "include": [
-    "src/**/*.ts"
+    "src/**/*.ts",
+    "src/app/layout/footer/**/*.ts" // include all TS files in footer folder
   ],
   "exclude": [
     "src/**/*.spec.ts"
   ]
 }
+

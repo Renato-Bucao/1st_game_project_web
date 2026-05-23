@@ -42,7 +42,7 @@ import { HandlebarsAdapter } from '@nestjs-modules/mailer/adapters/handlebars.ad
         from: '"No Reply" <no-reply@yourapp.com>', // default sender
       },
       template: {
-        dir: join(__dirname, 'templates'), // folder for .hbs files
+        dir: join(process.cwd(), 'src/templates'), // folder for .hbs files
         adapter: new HandlebarsAdapter(),  // ✅ correct adapter
         options: {
           strict: true,

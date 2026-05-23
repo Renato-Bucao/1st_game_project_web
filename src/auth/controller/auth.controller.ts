@@ -31,7 +31,7 @@ export class AuthController {
     return this.authService.login(user, ip);
   }
 
-  @Post('forgot-password')
+@Post('forgot-password')
 async forgotPassword(@Body('email') email: string) {
   return this.authService.forgotPassword(email);
 }
@@ -39,7 +39,7 @@ async forgotPassword(@Body('email') email: string) {
 @Post('reset-password')
 async resetPassword(@Body() body: { token: string; newPassword: string }) {
   return this.authService.resetPassword(body.token, body.newPassword);
-  }
+}
 
   
 }

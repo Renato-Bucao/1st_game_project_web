@@ -82,25 +82,25 @@ export class AuthService {
     return suspendedUntil;
   }
 
-  async forgotPassword(email: string) {
+async forgotPassword(email: string) {
   const user = await this.usersService.findOneByEmail(email);
-  if (!user) {
-    throw new NotFoundException('User not found');
-  }
+  if (!user) throw new NotFoundException('User not found');
 
-  // ✅ Generate reset token (JWT or random string)
   const payload = { sub: user.id, email: user.email };
   const resetToken = this.jwtService.sign(payload, { expiresIn: '15m' });
 
-  // ✅ Save token in DB (optional, for tracking)
   await this.usersService.update(user.id, { resetToken });
 
-  // ✅ Send email with reset link
-  const resetLink = `https://your-frontend.com/reset-password?token=${resetToken}`;
+  const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
+
   await this.mailService.sendMail({
     to: user.email,
     subject: 'Password Reset Request',
-    text: `Click here to reset your password: ${resetLink}`,
+    template: 'forgot-password', // ✅ matches .hbs filename
+    context: {
+      username: user.username,
+      resetLink,
+    },
   });
 
   return { message: 'Password reset link sent to your email' };

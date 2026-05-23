@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Put, Delete, UseGuards, Request, Patch, Req } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Put, Delete, UseGuards, Request, Patch, Req, ForbiddenException } from '@nestjs/common';
 import { UsersService } from '../service/users.service';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { UpdateUserDto } from '../dto/update-user.dto';
@@ -39,16 +39,20 @@ export class UsersController {
   }
   
 
-  // PUT → full update (replace all fields)
-  @UseGuards(JwtAuthGuard) // ✅ Require JWT token
-  @Put(':id')
-  async update(
-    @Param('id') id: string,
-    @Body() updateUserDto: UpdateUserDto,
-    @Req() req: any, // ✅ req.user gikan sa JwtStrategy.validate()
-  ) {
-    return this.usersService.update(Number(id), updateUserDto, req.user);
+@UseGuards(JwtAuthGuard) // ✅ Require JWT token
+@Put(':id')
+async update(
+  @Param('id') id: string,
+  @Body() updateUserDto: UpdateUserDto,
+  @Req() req: any, // ✅ req.user gikan sa JwtStrategy.validate()
+) {
+  // 🔒 Ensure user can only update their own account
+  if (+req.user.userId !== +id) {
+    throw new ForbiddenException('You can only update your own account');
   }
+
+  return this.usersService.update(Number(id), updateUserDto);
+}
     // PATCH → partial update (only specific fields)
   @UseGuards(JwtAuthGuard)
   @Patch(':id')

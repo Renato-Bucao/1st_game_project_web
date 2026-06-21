@@ -1,26 +1,23 @@
-import { 
-  IsString, 
-  IsEmail, 
-  IsNotEmpty, 
-  IsIn, 
-  IsOptional
-} from 'class-validator';
+import { IsString, IsEmail, IsNotEmpty, MinLength, Matches, IsOptional } from 'class-validator';
 
 export class CreateUserDto {
-  @IsString()
-  @IsNotEmpty()
-  username!: string; // required, unique username
+  @IsString() // ✅ ensure string type
+  @IsNotEmpty() // ✅ cannot be empty
+  username!: string;
 
   @IsString()
   @IsNotEmpty()
-  password!: string; // required, hashed password
+  @MinLength(8, { message: 'Password must be at least 8 characters long' }) // ✅ enforce minimum length
+  @Matches(/^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[\W_]).+$/, {
+    message: 'Password must contain uppercase, lowercase, number, and special character',
+  }) // ✅ enforce complexity
+  password!: string;
 
-  @IsEmail()
+  @IsEmail() // ✅ must be valid email format
   @IsNotEmpty()
-  email!: string; // required, unique email
+  email!: string;
 
-    // ✅ optional, auto‑set from req.ip
   @IsString()
-  @IsOptional()
+  @IsOptional() // ✅ optional field
   ipAddress?: string;
 }

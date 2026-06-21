@@ -1,39 +1,35 @@
-import { 
-  IsString, 
-  IsEmail, 
-  IsOptional, 
-  IsNotEmpty, 
-  Matches 
-} from 'class-validator';
+import { IsString, IsEmail, IsOptional, MinLength, Matches } from 'class-validator';
 
 export class UpdateUserDto {
-  @IsString()
-  @IsNotEmpty()
   @IsOptional()
-  username?: string;
-
   @IsString()
-  @IsNotEmpty()
-  @IsOptional()
-  password?: string; // will be re-hashed in service
+  username?: string; // ✅ optional update for username
 
+  @IsOptional()
+  @IsString()
+  @MinLength(8, { message: 'Password must be at least 8 characters long' })
+  @Matches(/^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[\W_]).+$/, {
+    message: 'Password must contain uppercase, lowercase, number, and special character',
+  })
+  password?: string; // ✅ optional update, will be re-hashed in service
+
+  @IsOptional()
   @IsEmail()
-  @IsOptional()
-  email?: string;
+  email?: string; // ✅ optional update for email
 
-  // ✅ Allow "active", "banned", or "suspended:<duration>"
   @IsOptional()
   @Matches(/^(active|banned|suspended(?::(1day|3days|5days))?)$/)
-  status?: string;
+  status?: string; // ✅ enforce allowed status values
 
   @IsOptional()
   @Matches(/^(user|moderator|admin)$/)
-  role?: string;
+  role?: string; // ✅ enforce allowed roles
 
   @IsOptional()
-  lastLogin?: Date;
+  lastLogin?: Date; // ✅ optional update for last login
 
   @IsOptional()
+  @IsString()
   ipAddress?: string;
 
   @IsOptional()

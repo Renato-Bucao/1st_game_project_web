@@ -1,54 +1,32 @@
-import { Entity, Column } from 'typeorm';
-import { BaseEntity } from '../../common/entities/base.entity';
+import { BaseEntity } from 'src/common/entities/base.entity';
+import { Entity, Column, Unique } from 'typeorm';
 
 @Entity('users')
+@Unique(['username'])
+@Unique(['email'])
 export class User extends BaseEntity {
+  
+  @Column({ nullable: false })
+  username!: string;
 
-  @Column({
-    nullable: false,
-    unique: true
-  })
-  username!: string;                                                       // unique username for login/identification
+  @Column({ nullable: false })
+  email!: string;
 
-   @Column({
-    nullable: false,
-  })
-  password!: string;                                                       // store hashed password (never plain text)
+  @Column({ nullable: false, select: false })
+  password!: string;
 
- @Column({
-    nullable: false,
-    unique: true
-  })
-  email!: string;                                                          // user’s email, must be unique                                            // auto-set when account is created
+  @Column({ default: 'active', nullable: false })
+  status!: string;
 
-  @Column({
-    type: 'varchar',
-    length: 20,
-    default: 'active',
-    nullable: false
-  }) 
-  status!: string;                                                 // account lifecycle status (active, banned, suspended)
+  @Column({ default: 'user', nullable: false })
+  role!: string;
 
-  @Column({
-    type: 'varchar',
-    length: 50,
-    default: 'user',
-    nullable: false
-  })
-  role!: string;                                                          // defines role in system (user, admin, moderator)
+  @Column({ type: 'timestamp', nullable: true })
+  lastLogin?: Date;   // ✅ add this
 
-  @Column({
-    type: 'timestamp',
-    nullable: false,
-    default: () => 'CURRENT_TIMESTAMP'  //temporary default, will be updated on login
-  }) 
-  lastLogin!: Date;                                                       // updated when user logs in
+  @Column({ nullable: true })
+  ipAddress?: string;
 
-  @Column({
-    nullable: true,
-  }) 
-  ipAddress!: string;                                                    // last known IP address of user
-
-    @Column({ nullable: true })
-  resetToken?: string; // ✅ only in entity
+  @Column({ nullable: true })
+  resetToken?: string;
 }

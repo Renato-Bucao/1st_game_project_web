@@ -1,91 +1,91 @@
-import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common'; // ✅ NestJS core decorators ug exceptions
-import { InjectRepository } from '@nestjs/typeorm'; // ✅ Para ma-inject ang TypeORM repository
-import { Repository } from 'typeorm';               // ✅ TypeORM repository class
-import { User } from '../entities/user';            // ✅ User entity nga naka-map sa DB table
-import { CreateUserDto } from '../dto/create-user.dto'; // ✅ DTO para sa create user request
-import { UpdateUserDto } from '../dto/update-user.dto'; // ✅ DTO para sa update user request
-import * as bcrypt from 'bcrypt';                   // ✅ Library para sa password hashing
+import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { User } from '../entities/user';
+import { CreateUserDto } from '../dto/create-user.dto';
+import { UpdateUserDto } from '../dto/update-user.dto';
+import * as bcrypt from 'bcrypt';
 
-//----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-// ✅ Marks this class as injectable (pwede i‑inject sa controller/service)
 @Injectable()
 export class UsersService {
   constructor(
-    @InjectRepository(User)                         // ✅ Inject User repository gikan sa TypeORM
-    private usersRepository: Repository<User>,      // ✅ Repository object para maka-access sa DB operations
-  ) { }
-//----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-  // READ all users
+    @InjectRepository(User)
+    private usersRepository: Repository<User>,
+  ) {}
+
+  // READ all users (hide password)
   async findAll() {
-    return await this.usersRepository.find();       // ✅ Query tanan users gikan sa DB
+    return await this.usersRepository.find({
+      select: [
+        'id','username','email','status','role',
+        'lastLogin','ipAddress','resetToken',
+        'createdDate','updatedDate',
+      ],
+    });
   }
-//----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
   // READ one user by ID
   async findOne(id: number) {
-    const user = await this.usersRepository.findOne({ where: { id: id } }); // ✅ Query user by ID
-
-    if (!user) {
-      throw new NotFoundException(`User with ID ${id} not found`); // ❌ Throw error kung wala makita
-    }
-    return user;                                    // ✅ Return user object kung makita
+    const user = await this.usersRepository.findOne({
+      where: { id },
+      select: [
+        'id','username','email','status','role',
+        'lastLogin','ipAddress','resetToken',
+        'createdDate','updatedDate',
+      ],
+    });
+    if (!user) throw new NotFoundException(`User with ID ${id} not found`);
+    return user;
   }
-//----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-  // Find one user by email
+
+  // 🔍 Find user by email (needed in forgotPassword)
   async findOneByEmail(email: string): Promise<User> {
     const user = await this.usersRepository.findOne({
       where: { email },
+      select: ['id','username','email','password','status','role','updatedDate','resetToken'],
     });
-
-    if (!user) {
-      throw new NotFoundException(`User with email ${email} not found`);
-    }
-
+    if (!user) throw new NotFoundException(`User with email ${email} not found`);
     return user;
   }
-//----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-  // READ one user by username
+
+  // 🔍 Find user by username (needed in login)
   async findOneByUsername(username: string) {
-    const user = await this.usersRepository.findOne({ where: { username } }); // ✅ Query user by username
-
-    if (!user) {
-      throw new NotFoundException(`User with username ${username} not found`); // ❌ Throw error kung wala makita
-    }
-    return user;                                    // ✅ Return user object kung makita
+    const user = await this.usersRepository.findOne({
+      where: { username },
+      select: ['id','username','email','password','status','role','updatedDate'],
+    });
+    if (!user) throw new NotFoundException(`User with username ${username} not found`);
+    return user;
   }
-//----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
   // CREATE new user
-async create(createUserDto: CreateUserDto) {
-  const { username, email, password, ipAddress } = createUserDto;
+  async create(createUserDto: CreateUserDto) {
+    const { username, email, password, ipAddress } = createUserDto;
 
-  // ✅ Input validation
-  if (!username || username.trim() === '')
-    throw new BadRequestException('Username should not be empty');
-  if (!password || password.trim() === '')
-    throw new BadRequestException('Password should not be empty');
-  if (!email || email.trim() === '')
-    throw new BadRequestException('Email should not be empty');
+    if (await this.usersRepository.findOne({ where: { username } })) {
+      throw new BadRequestException(`Username "${username}" is already taken`);
+    }
+    if (await this.usersRepository.findOne({ where: { email } })) {
+      throw new BadRequestException(`Email "${email}" is already registered`);
+    }
 
-    // ✅ Hash password before saving
-    const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-   // ✅ Create new user entity
-  const user = this.usersRepository.create({
-    username,
-    email,
-    password: hashedPassword, // store hashed password only
-    status: 'active',         // default
-    role: 'user',           // default
-    createdDate: new Date(),
-    ipAddress,                // ✅ automatic log sa IP
+    const user = this.usersRepository.create({
+      username: username.trim(),
+      email: email.trim(),
+      password: hashedPassword,
+      status: 'active',
+      role: 'user',
+      ipAddress,
     });
 
-    return await this.usersRepository.save(user);  // ✅ Save user to DB
+    const savedUser = await this.usersRepository.save(user);
+    return { message: 'User created successfully', data: savedUser };
   }
-//----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
   // UPDATE user by ID
   async update(id: number, updateData: UpdateUserDto, currentUser?: any) {
-  // ✅ Kung naa ang currentUser (gikan sa token), i‑check nga match ang id
   if (currentUser && currentUser.userId !== id) {
     throw new ForbiddenException('You can only update your own account');
   }
@@ -93,45 +93,34 @@ async create(createUserDto: CreateUserDto) {
   const user = await this.usersRepository.findOne({ where: { id } });
   if (!user) throw new NotFoundException(`User with ID ${id} not found`);
 
-    // ✅ Apply updates
-  if (updateData.username) user.username = updateData.username;
-  if (updateData.email) user.email = updateData.email;
+  Object.assign(user, updateData);
+
+  // ✅ Hashing handled consistently here
   if (updateData.password) {
-    const saltRounds = 10;
-    user.password = await bcrypt.hash(updateData.password, saltRounds);
-    } 
-  
-  // ✅ Same update logic as before
-  if (updateData.username !== undefined) {
-    if (updateData.username.trim() === '') throw new BadRequestException('Username should not be empty');
-    user.username = updateData.username;
+    user.password = await bcrypt.hash(updateData.password, 10);
   }
 
-  if (updateData.password !== undefined) {
-    if (updateData.password.trim() === '') throw new BadRequestException('Password should not be empty');
-    const saltRounds = 10;
-    user.password = await bcrypt.hash(updateData.password, saltRounds);
-  }
-
-  if (updateData.email !== undefined) {
-    if (updateData.email.trim() === '') throw new BadRequestException('Email should not be empty');
-    user.email = updateData.email;
-  }
-
-  if (updateData.status !== undefined) user.status = updateData.status;
-  if (updateData.role !== undefined) user.role = updateData.role;
-
-  return await this.usersRepository.save(user);
+  const savedUser = await this.usersRepository.save(user);
+  return { message: 'User updated successfully', data: savedUser };
 }
-//----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
   // DELETE user by ID
   async remove(id: number) {
-    const result = await this.usersRepository.delete({ id: id }); // ✅ Delete user by ID
-
-    if (result.affected === 0) {
-      throw new NotFoundException(`User with ID ${id} not found`); // ❌ Throw error kung wala na-delete
-    }
-
-    return { message: `User with ID ${id} deleted successfully` }; // ✅ Return success message
+    const user = await this.usersRepository.findOne({ where: { id } });
+    if (!user) throw new NotFoundException(`User with ID ${id} not found`);
+    await this.usersRepository.delete({ id });
+    return { message: `User with ID ${id} deleted successfully`, data: user };
   }
+
+// ✅ Helper: set reset token (used in forgotPassword)
+async setResetToken(id: number, resetToken: string) {
+  const user = await this.usersRepository.findOne({ where: { id } });
+  if (!user) throw new NotFoundException(`User with ID ${id} not found`);
+
+  user.resetToken = resetToken;
+  const savedUser = await this.usersRepository.save(user);
+  return { message: 'Reset token updated', data: savedUser };
+}
+
 }

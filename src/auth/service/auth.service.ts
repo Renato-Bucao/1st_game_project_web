@@ -14,56 +14,41 @@ export class AuthService {
 
   // ✅ Validate user credentials
   async validateUser(username: string, pass: string) {
-    const user = await this.usersService.findOneByUsername(username);
-    if (!user) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
+  const user = await this.usersService.findOneByUsername(username);
 
-    // ❌ If banned → permanent until admin changes
-    if (user.status === 'banned') {
-      throw new UnauthorizedException('Your account has been permanently banned');
-    }
+  if (user.status === 'banned') {
+    throw new UnauthorizedException('Your account has been permanently banned');
+  }
 
-    // ❌ If suspended → check duration
-    if (user.status?.startsWith('suspended')) {
-      // Example: status = "suspended:3days"
-      const parts = user.status.split(':');
-      if (parts.length === 2) {
-        const duration = parts[1]; // "1day", "3days", "5days"
-        const suspendedUntil = this.calculateSuspension(user.updatedDate, duration);
-        if (new Date() < suspendedUntil) {
-          throw new UnauthorizedException(`Your account is suspended until ${suspendedUntil.toISOString()}`);
-        }
+  if (user.status?.startsWith('suspended')) {
+    const parts = user.status.split(':');
+    if (parts.length === 2) {
+      const duration = parts[1];
+      const suspendedUntil = this.calculateSuspension(user.updatedDate, duration);
+      if (new Date() < suspendedUntil) {
+        throw new UnauthorizedException(`Your account is suspended until ${suspendedUntil.toISOString()}`);
       }
     }
-
-    // ✅ Compare password
-    const isMatch = await bcrypt.compare(pass, user.password);
-    if (!isMatch) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
-
-    return user;
   }
+
+  const isMatch = await bcrypt.compare(pass, user.password);
+  if (!isMatch) throw new UnauthorizedException('Invalid credentials');
+
+  return user;
+}
+
 
   // ✅ Login and issue JWT
-  async login(user: any, ipAddress: string) {
-    // Auto update lastLogin + ipAddress
-    await this.usersService.update(user.id, {
-      lastLogin: new Date(),
-      ipAddress,
-    });
+async login(user: any, ipAddress: string) {
+  const { data } = await this.usersService.update(user.id, {
+    lastLogin: new Date(),
+    ipAddress,
+  });
 
-    const payload = {
-      username: user.username,
-      sub: user.id,
-      role: user.role,
-    };
+  const payload = { username: data.username, sub: data.id, role: data.role };
+  return { access_token: this.jwtService.sign(payload) };
+}
 
-    return {
-      access_token: this.jwtService.sign(payload),
-    };
-  }
 
   // ✅ Helper: calculate suspension end date
   private calculateSuspension(startDate: Date, duration: string): Date {
@@ -89,14 +74,15 @@ async forgotPassword(email: string) {
   const payload = { sub: user.id, email: user.email };
   const resetToken = this.jwtService.sign(payload, { expiresIn: '15m' });
 
-  await this.usersService.update(user.id, { resetToken });
+  // ✅ Use UsersService helper
+  await this.usersService.setResetToken(user.id, resetToken);
 
   const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
 
   await this.mailService.sendMail({
     to: user.email,
     subject: 'Password Reset Request',
-    template: 'forgot-password', // ✅ matches .hbs filename
+    template: 'forgot-password',
     context: {
       username: user.username,
       resetLink,
@@ -106,22 +92,21 @@ async forgotPassword(email: string) {
   return { message: 'Password reset link sent to your email' };
 }
 
+
 async resetPassword(token: string, newPassword: string) {
   try {
     const payload = this.jwtService.verify(token);
     const user = await this.usersService.findOne(payload.sub);
-
     if (!user) throw new NotFoundException('User not found');
 
-    // ✅ Hash new password
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
-
-    await this.usersService.update(user.id, { password: hashedPassword });
+    // ❌ Dili na nato i‑hash diri
+    await this.usersService.update(user.id, { password: newPassword });
 
     return { message: 'Password successfully reset' };
-  } catch (err) {
+  } catch {
     throw new UnauthorizedException('Invalid or expired token');
   }
 }
+
 
 }

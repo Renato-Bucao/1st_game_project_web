@@ -25,17 +25,26 @@ export class UsersService {
   }
 
   // READ one user by ID
-  async findOne(id: number) {
-    const user = await this.usersRepository.findOne({
-      where: { id },
-      select: [
-        'id','username','email','status','role',
-        'lastLogin','ipAddress','resetToken',
-        'createdDate','updatedDate',
-      ],
-    });
-    if (!user) throw new NotFoundException(`User with ID ${id} not found`);
-    return user;
+// READ one user by ID (hide password)
+async findOne(id: number) {
+  const user = await this.usersRepository.findOne({
+    where: { id },
+    select: [
+      'id',
+      'username',
+      'email',
+      'status',
+      'role',
+      'lastLogin',
+      'ipAddress',
+      'resetToken',
+      'createdDate',
+      'updatedDate',
+    ], // ✅ password excluded
+  });
+
+  if (!user) throw new NotFoundException(`User with ID ${id} not found`);
+  return user;
   }
 
   // 🔍 Find user by email (needed in forgotPassword)
@@ -72,12 +81,12 @@ export class UsersService {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = this.usersRepository.create({
-      username: username.trim(),
-      email: email.trim(),
-      password: hashedPassword,
-      status: 'active',
-      role: 'user',
-      ipAddress,
+    username: createUserDto.username,
+    email: createUserDto.email,
+    password: hashedPassword,
+    ipAddress,
+    status: 'pending',
+    role: 'user',
     });
 
     const savedUser = await this.usersRepository.save(user);

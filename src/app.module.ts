@@ -9,51 +9,41 @@ import { HandlebarsAdapter } from '@nestjs-modules/mailer/adapters/handlebars.ad
 
 @Module({
   imports: [
-    // ✅ Load environment variables globally
     ConfigModule.forRoot({
-      isGlobal: true,                                               // → available sa tanan modules
-      envFilePath: `.env.${process.env.NODE_ENV || 'development'}`, // → dynamic file depende sa NODE_ENV (development/production)
+      isGlobal: true,
+      envFilePath: `.env.${process.env.NODE_ENV || 'development'}`,
     }),
-
-    // ✅ Database connection using env variables
     TypeOrmModule.forRoot({
-      type: 'mysql',                                         // → gamit MySQL database
-      host: process.env.DB_HOST,                             // → DB host gikan sa .env
-      port: Number(process.env.DB_PORT),                     // → DB port (usually 3306)
-      username: process.env.DB_USER,                         // → DB username
-      password: process.env.DB_PASSWORD,                     // → DB password
-      database: process.env.DB_NAME,                         // → DB name
-      autoLoadEntities: true,                                // → auto-load ang mga @Entity classes
-      synchronize: process.env.NODE_ENV === 'development',   // → auto-create tables only in dev mode
+      type: 'mysql',
+      host: process.env.DB_HOST,
+      port: Number(process.env.DB_PORT),
+      username: process.env.DB_USER,
+      password: process.env.DB_PASSWORD,
+      database: process.env.DB_NAME,
+      autoLoadEntities: true,
+      synchronize: process.env.NODE_ENV === 'development',
     }),
-
-    // ✅ MailerModule config
     MailerModule.forRoot({
       transport: {
-        host: process.env.MAIL_HOST,        // e.g. smtp.gmail.com
-        port: Number(process.env.MAIL_PORT),// e.g. 587
-        secure: false,                      // true kung SSL (port 465)
+        host: process.env.MAIL_HOST,
+        port: Number(process.env.MAIL_PORT),
+        secure: false,
         auth: {
-          user: process.env.MAIL_USER,      // email account
-          pass: process.env.MAIL_PASS,      // app password or SMTP password
+          user: process.env.MAIL_USER,
+          pass: process.env.MAIL_PASS,
         },
       },
       defaults: {
-        from: '"No Reply" <no-reply@yourapp.com>', // default sender
+        from: '"No Reply" <no-reply@yourapp.com>',
       },
       template: {
-        dir: join(process.cwd(), 'src/templates'), // folder for .hbs files
-        adapter: new HandlebarsAdapter(),  // ✅ correct adapter
-        options: {
-          strict: true,
-        }
-      } 
+        dir: join(process.cwd(), 'src/templates/mail'), // ✅ consistent path
+        adapter: new HandlebarsAdapter(),
+        options: { strict: true },
+      },
     }),
-
-    UsersModule,                                             // ✅ Import UsersModule (user routes/services)
-    AuthModule                                               // ✅ Import AuthModule (auth routes/services)
+    UsersModule,
+    AuthModule,
   ],
-  controllers: [],                                           // ✅ Walay root controllers diri, modules na ang nagdala
-  providers: [],                                             // ✅ Walay extra providers, modules na ang nagdala
 })
-export class AppModule {}                                    // ✅ Root module sa imong NestJS app
+export class AppModule {}

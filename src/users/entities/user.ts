@@ -1,32 +1,32 @@
 import { BaseEntity } from 'src/common/entities/base.entity';
-import { Entity, Column, Unique } from 'typeorm';
+import { Entity, Column, Unique, } from 'typeorm';
 
 @Entity('users')
-@Unique(['username'])
-@Unique(['email'])
 export class User extends BaseEntity {
-  
-  @Column({ nullable: false })
+ @Column({ nullable: false, unique: true })
   username!: string;
 
-  @Column({ nullable: false })
+  @Column({ nullable: false, select: false })
+  password!: string;    // ✅ hashed before save
+
+  @Column({ nullable: false, unique: true })
   email!: string;
 
-  @Column({ nullable: false, select: false })
-  password!: string;
+  @Column({ type: 'timestamp', nullable: true })
+  lastLogin?: Date;     // ✅ updated on login
 
-  @Column({ default: 'active', nullable: false })
-  status!: string;
+  @Column({ nullable: true })
+  ipAddress?: string;   // ✅ detect from req.ip
+
+  @Column({ nullable: true })
+  resetToken?: string;  // ✅ set on forgot password, expires in 1h
+
+  @Column({ default: 'pending', nullable: false })
+  status!: string;      // ✅ default pending
 
   @Column({ default: 'user', nullable: false })
-  role!: string;
-
-  @Column({ type: 'timestamp', nullable: true })
-  lastLogin?: Date;   // ✅ add this
+  role!: string;        // ✅ default user
 
   @Column({ nullable: true })
-  ipAddress?: string;
-
-  @Column({ nullable: true })
-  resetToken?: string;
+  verificationToken?: string; // ✅ set on register, expires in 1h
 }

@@ -35,4 +35,8 @@ export class UpdateUserDto {
   @IsOptional()
   @IsString()
   resetToken?: string;
+
+  @IsOptional()
+  @IsString()
+  verificationToken?: string; // ✅ added so controller update works
 }

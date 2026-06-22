@@ -17,7 +17,11 @@ export class CreateUserDto {
   @IsNotEmpty()
   email!: string;
 
+  @IsOptional()
   @IsString()
-  @IsOptional() // ✅ optional field
-  ipAddress?: string;
+  status?: string; // ✅ add this
+
+  @IsOptional()
+  @IsString()
+  ipAddress?: string; // ✅ add this
 }
